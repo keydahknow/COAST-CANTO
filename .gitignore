@@ -1,0 +1,37 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# ---- Virtual environments (NEVER commit these) ----
+.venv/
+venv/
+env/
+ENV/
+
+# ---- YOLO model weights (auto-downloaded, too big for git) ----
+*.pt
+*.onnx
+*.engine
+
+# ---- Test videos & media (too big for git; share via Drive/etc.) ----
+data/videos/*
+!data/videos/.gitkeep
+data/images/*
+!data/images/.gitkeep
+
+# ---- Program output (generated, don't commit) ----
+output/*
+!output/.gitkeep
+runs/
+
+# ---- Secrets (API keys, tokens for Telegram/Twilio later) ----
+.env
+*.secret
+
+# ---- OS / editor junk ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,3 @@
+# This file keeps the empty data/videos/ folder in git.
+# Actual video files are ignored (see .gitignore) — they're too big for GitHub.
+# Share test videos with your team via Google Drive / WhatsApp / a shared link.
