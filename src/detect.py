@@ -111,6 +111,7 @@ def main():
             frame,
             classes=[config.PERSON_CLASS_ID],
             conf=config.CONFIDENCE_THRESHOLD,
+            imgsz=config.IMAGE_SIZE,
             verbose=False,
         )
 
