@@ -1,7 +1,7 @@
 """
 Central settings for C.O.A.S.T.
 Keep tunable values here so teammates change behavior in ONE place
-instead of hunting through the code.
+instead of hunting through the code. (ADDING KEEDANU TEST)
 """
 
 # --- Model ---
