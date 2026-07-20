@@ -1,5 +1,5 @@
 """
-Central settings for C.O.A.S.T.
+Central settings for C.O.A.S.T. (ADDING IAMNI TEST)
 Keep tunable values here so teammates change behavior in ONE place
 instead of hunting through the code.
 """
