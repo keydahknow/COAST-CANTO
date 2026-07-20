@@ -24,6 +24,10 @@ CONFIDENCE_THRESHOLD = 0.25
 # detected, but slower on CPU. Try 1280 for wide/crowded shots, 640 for speed.
 IMAGE_SIZE = 1280
 
+
+
+
+
 # --- Display / output ---
 # Show a live window while processing. Set False if running headless.
 SHOW_WINDOW = True
