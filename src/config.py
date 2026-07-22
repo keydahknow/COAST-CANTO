@@ -24,7 +24,12 @@ CONFIDENCE_THRESHOLD = 0.25
 # detected, but slower on CPU. Try 1280 for wide/crowded shots, 640 for speed.
 IMAGE_SIZE = 1280
 
-
+# --- Tracking (M2) ---
+# ByteTrack is a common, fast tracker bundled with Ultralytics.
+TRACKER_CONFIG = "bytetrack.yaml"
+# Draw a short line showing where each ID has moved recently.
+SHOW_TRAIL = True
+TRAIL_LENGTH = 30  # how many past positions to keep per ID
 
 
 
