@@ -4,6 +4,7 @@
 ultralytics==8.3.0      # YOLO models + tracking (pulls in torch, opencv, numpy)
 opencv-python==4.10.0.84 # video reading, drawing, display
 numpy==1.26.4            # arrays / math
+lapx>=0.5.2              # required by YOLO tracking (ByteTrack)
 
 # --- Optional, add later when you build alerting ---
 # python-dotenv==1.0.1   # load API keys from .env
