@@ -44,6 +44,7 @@ class Swimmer:
     is_distress: bool = False
     severity: str = "none"  # "none" | "warning" | "alert"
     grid_cell: str = ""
+    is_submerged: bool = False  # True when drawing a submersion alert stub
     trail: List[Tuple[int, int]] = field(default_factory=list)
 
 
@@ -100,14 +101,31 @@ def update_trails(swimmers: List[Swimmer], history: dict) -> None:
 def draw_swimmer(frame, swimmer: Swimmer) -> None:
     """Draw box, ID label, and optional trail for one tracked person."""
     x1, y1, x2, y2 = swimmer.box
-    color = color_for_id(swimmer.id)
 
-    if config.SHOW_TRAIL and len(swimmer.trail) > 1:
+    if swimmer.is_distress:
+        if swimmer.severity == "alert":
+            color = config.DISTRESS_COLOR
+        else:
+            color = config.WARNING_COLOR
+    else:
+        color = color_for_id(swimmer.id)
+
+    if config.SHOW_TRAIL and len(swimmer.trail) > 1 and not swimmer.is_submerged:
         for i in range(1, len(swimmer.trail)):
             cv2.line(frame, swimmer.trail[i - 1], swimmer.trail[i], color, 2)
 
-    cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-    label = f"ID {swimmer.id}  {swimmer.confidence:.2f}"
+    thickness = 3 if swimmer.is_distress else 2
+    cv2.rectangle(frame, (x1, y1), (x2, y2), color, thickness)
+
+    if swimmer.is_submerged:
+        label = f"ID {swimmer.id}  SUBMERGED"
+    elif swimmer.is_distress and swimmer.severity == "warning":
+        label = f"ID {swimmer.id}  STATIONARY"
+    elif swimmer.is_distress and swimmer.severity == "alert":
+        label = f"ID {swimmer.id}  ALERT"
+    else:
+        label = f"ID {swimmer.id}  {swimmer.confidence:.2f}"
+
     cv2.putText(
         frame,
         label,
