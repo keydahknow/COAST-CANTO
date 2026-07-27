@@ -40,6 +40,14 @@ SUBMERSION_MIN_VISIBLE_SECONDS = 1.0  # must be tracked this long first
 DISTRESS_COLOR = (0, 0, 255)   # red (BGR)
 WARNING_COLOR = (0, 165, 255)  # orange (BGR)
 
+# --- Alerts (M5) ---
+ENABLE_DISCORD = True          # recommended for demo (free webhook)
+ENABLE_TELEGRAM = False        # optional; set True if using Telegram bot
+DISCORD_BOT_NAME = "C.O.A.S.T. Alert"
+SHOW_ALERT_BANNER = True       # big top banner when distress is active
+ALERT_COOLDOWN_SECONDS = 15.0  # don't re-send same ID+reason too often
+PLAY_ALERT_SOUND = False       # beep on alert (Windows only; annoying on video files)
+
 
 # --- Display / output ---
 # Show a live window while processing. Set False if running headless.
