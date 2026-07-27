@@ -6,7 +6,6 @@ opencv-python==4.10.0.84 # video reading, drawing, display
 numpy==1.26.4            # arrays / math
 lapx>=0.5.2              # required by YOLO tracking (ByteTrack)
 
-# --- Optional, add later when you build alerting ---
-# python-dotenv==1.0.1   # load API keys from .env
-# requests==2.32.3       # Telegram bot alerts
-# streamlit==1.38.0      # polished web dashboard for judges
+# --- Alerts (M5) ---
+python-dotenv==1.0.1   # load Telegram keys from .env
+requests==2.34.2       # send Telegram messages

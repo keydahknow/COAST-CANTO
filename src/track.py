@@ -1,7 +1,7 @@
 """
-C.O.A.S.T. — M2 + M4: track people and flag possible distress.
+C.O.A.S.T. — M2 + M4 + M5: track, distress detection, and alerts.
 
-Runs tracking (stable IDs) plus distress rules (stationary / submersion).
+Runs tracking, distress rules, and on-screen (plus optional Telegram) alerts.
 
 USAGE (from project root, venv active):
 
@@ -18,6 +18,7 @@ from ultralytics import YOLO
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import config
+from alerts import AlertManager
 from distress import DistressMonitor
 from tracker import draw_swimmer, track_frame, update_trails
 
@@ -62,7 +63,7 @@ def make_writer(cap, source):
     fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
 
     base = "webcam" if source.isdigit() else os.path.splitext(os.path.basename(source))[0]
-    out_path = os.path.join(config.OUTPUT_DIR, f"{base}_distress.mp4")
+    out_path = os.path.join(config.OUTPUT_DIR, f"{base}_alert.mp4")
 
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     writer = cv2.VideoWriter(out_path, fourcc, fps, (width, height))
@@ -131,10 +132,11 @@ def main():
         writer, out_path, fps = make_writer(cap, args.source)
 
     distress_monitor = DistressMonitor(fps=fps)
+    alert_manager = AlertManager(fps=fps)
     trail_history = {}
 
     print("[INFO] Processing... press 'q' in the window to quit early.")
-    print("[INFO] Orange box = STATIONARY  |  Red box = SUBMERGED / ALERT")
+    print("[INFO] Orange = STATIONARY  |  Red = SUBMERGED  |  Banner = M5 alert")
     frame_count = 0
     while True:
         ok, frame = cap.read()
@@ -149,6 +151,9 @@ def main():
         # M4: apply distress rules (mutates swimmers + returns submersion stubs)
         submerged_stubs = distress_monitor.process(swimmers, frame_count)
 
+        # M5: banners, console log, optional Telegram (with cooldown)
+        alert_manager.handle_frame(frame, swimmers, submerged_stubs, frame_count)
+
         for swimmer in swimmers:
             draw_swimmer(frame, swimmer)
         for stub in submerged_stubs:
@@ -160,7 +165,7 @@ def main():
             writer.write(frame)
 
         if show_window:
-            cv2.imshow("C.O.A.S.T. - tracking + distress (M2+M4)", frame)
+            cv2.imshow("C.O.A.S.T. - tracking + distress + alerts", frame)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
 
