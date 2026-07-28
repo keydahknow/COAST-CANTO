@@ -1,22 +1,27 @@
 # C.O.A.S.T. — Coastal Observation & Analytic Sensing Technology
 
-AI camera monitoring that detects swimmers in distress and alerts lifeguards to their location.
+AI camera monitoring that detects swimmers in distress and alerts lifeguards.
 Prototype for the **CANTO Innovation Challenge 2026** — *Climate & Disaster Resilience* track.
 
 **Team: The Buoyz** — Asia Cooper · Imani Zakuri · Samuel Blache · Keedanu Halls
 
-> ⚠️ This is a research **prototype / proof-of-concept**. It is designed to **assist, not replace**
-> trained lifeguards. It must not be relied on as a sole means of drowning prevention.
+> This is a **prototype / proof-of-concept**. It **assists, not replaces** trained lifeguards.
 
 ---
 
-## What it does right now
+## What it does (demo)
 
-- Runs a pretrained **YOLO** model on a **video file** (or webcam) using **OpenCV**.
-- Draws a box around every detected person and shows a live count.
-- Optionally saves an annotated video to `output/`.
+One command runs the full pipeline:
 
-This is milestone 1 ("it sees people"). Distress detection and alerting come next — see the roadmap below.
+1. **Detect & track** swimmers with stable IDs (YOLO + ByteTrack)
+2. **Flag distress** — stationary too long, or vanished from surface (submersion)
+3. **Alert** — on-screen banner + optional **Discord** message
+
+```powershell
+python src/coast.py --source data/videos/demo.mp4 --no-window
+```
+
+Output: `output/demo_coast.mp4` (annotated demo video for judges).
 
 ---
 
@@ -25,119 +30,106 @@ This is milestone 1 ("it sees people"). Distress detection and alerting come nex
 ```
 CANTO/
 ├── src/
-│   ├── detect.py      # main script — run YOLO on a video
-│   └── config.py      # all tunable settings live here
-├── data/
-│   └── videos/        # put test videos here (NOT committed to git)
-├── output/            # annotated videos land here (NOT committed to git)
-├── requirements.txt   # Python dependencies (pinned versions)
-├── .gitignore         # keeps big/secret files out of git
-├── LICENSE
-└── README.md
+│   ├── coast.py       # ★ official demo entry point
+│   ├── pipeline.py    # full M2 + M4 + M5 pipeline
+│   ├── detect.py      # M1 only (person detection, no tracking)
+│   ├── track.py       # legacy alias → use coast.py
+│   ├── tracker.py     # M2 tracking + Swimmer objects
+│   ├── distress.py    # M4 distress rules
+│   ├── alerts.py      # M5 on-screen + Discord alerts
+│   └── config.py      # all tunable settings
+├── data/videos/       # test clips (not in git)
+├── output/            # demo videos (not in git)
+├── notebooks/         # optional YOLO training (Google Colab)
+├── .env.example       # Discord webhook template
+└── requirements.txt
 ```
 
 ---
 
-## Setup (every teammate does this once)
+## Setup (each teammate, once)
 
-You need **Python 3.10 or newer**. Check with `python --version`.
-
-### 1. Clone the repo
-
-```bash
-git clone <your-repo-url>
-cd CANTO
-```
-
-### 2. Create a virtual environment (keeps dependencies isolated)
-
-**Windows (PowerShell):**
+**Requires Python 3.12** (not 3.13/3.14 — avoids package build issues).
 
 ```powershell
-python -m venv .venv
+git clone https://github.com/keydahknow/COAST-CANTO.git
+cd COAST-CANTO
+py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
-```
-
-> If PowerShell blocks activation, run once:
-> `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
-
-**macOS / Linux:**
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-You'll know it worked when your prompt starts with `(.venv)`.
-
-### 3. Install dependencies
-
-```bash
 pip install -r requirements.txt
 ```
 
-This pulls in YOLO (ultralytics), OpenCV, and PyTorch. First install is a few hundred MB and may take a few minutes — that's normal.
-
 ---
 
-## Running it
+## Run the demo
 
-1. Put a test video in `data/videos/` (e.g. `test.mp4`). A pool or beach clip filmed from above works best.
-2. With your virtual environment active, run:
+```powershell
+# Best for export (no slow live window):
+python src/coast.py --source data/videos/demo.mp4 --no-window
 
-```bash
-python src/detect.py --source data/videos/test.mp4
+# Webcam live demo:
+python src/coast.py --source 0
+
+# M1 only (detection, no tracking/distress):
+python src/detect.py --source data/videos/demo.mp4
 ```
 
-The first run downloads the YOLO model (`yolov8n.pt`, ~6 MB) automatically. Press **`q`** to quit the preview window.
+Tune settings in `src/config.py` (model, thresholds, alert cooldown).
 
-**Other options:**
+---
 
-```bash
-python src/detect.py --source 0                       # use the webcam
-python src/detect.py --source data/videos/test.mp4 --no-window   # no preview, just save output
+## Discord alerts (optional, free)
+
+1. Discord channel → Integrations → Webhooks → New Webhook → copy URL
+2. `copy .env.example .env` and paste URL:
+   ```
+   DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+   ```
+3. Re-run `coast.py` — messages appear in channel when distress triggers
+
+Test webhook (PowerShell):
+
+```powershell
+Invoke-RestMethod -Uri "YOUR_WEBHOOK_URL" -Method Post -ContentType "application/json" -Body '{"content":"C.O.A.S.T. test OK"}'
 ```
 
-Change detection sensitivity, output settings, etc. in `src/config.py`.
+---
+
+## Milestone status
+
+- [x] **M1 — Detection** (`detect.py`)
+- [x] **M2 — Tracking** (`tracker.py`)
+- [ ] **M3 — Grid & zones** (location cells — not built yet)
+- [x] **M4 — Distress logic** (`distress.py`)
+- [x] **M5 — Alerting** (`alerts.py`, Discord)
+- [x] **M6 — Demo entry point** (`coast.py`)
+- [ ] **M6 — Streamlit dashboard** (optional polish)
+- [ ] **Fine-tuning** (thresholds + optional custom model via Colab notebook)
+
+*Hardware deployment (proposal vision): solar buoys, Raspberry Pi, LoRaWAN, smartwatch — not in this software prototype.*
 
 ---
 
-## Where to get test videos
+## Git workflow
 
-- **Film your own** (best): a friend swimming normally vs. gently "struggling" in a shallow, supervised pool.
-- **YouTube**: search "pool swimmers overhead", "beach swimmers drone". Use a downloader like `yt-dlp`.
-- Keep videos **out of git** — share them via Google Drive / WhatsApp. Git is for code, not media.
+```powershell
+git checkout main
+git pull
+git checkout -b feature/your-task
+# ... work ...
+git add .
+git commit -m "Describe change"
+git push -u origin feature/your-task
+```
 
----
-
-## Team git workflow (keep it simple)
-
-1. **Pull before you start:** `git pull`
-2. **Work on a branch**, not directly on `main`:
-   ```bash
-   git checkout -b feature/tracking      # e.g. Samuel adds tracking
-   ```
-3. **Commit small, clear changes:**
-   ```bash
-   git add .
-   git commit -m "Add grid overlay to detection"
-   ```
-4. **Push and open a Pull Request** on GitHub so a teammate can review before merging.
-
-**Golden rules for this repo:**
-- Never commit the `.venv/` folder, model weights (`*.pt`), or videos — `.gitignore` handles this for you.
-- Never commit API keys/tokens (Telegram, Twilio). Those go in a `.env` file (already git-ignored).
-- If someone edits `requirements.txt`, everyone else re-runs `pip install -r requirements.txt`.
+Open a Pull Request on GitHub. Never commit `.env`, `.venv/`, videos, or `*.pt` weights.
 
 ---
 
-## Roadmap
+## Demo checklist (competition)
 
-- [x] **M1 — Detection:** find people in a video (YOLO + OpenCV).
-- [ ] **M2 — Tracking:** stable ID per swimmer across frames.
-- [ ] **M3 — Grid & zones:** overlay a location grid; report which cell a person is in.
-- [ ] **M4 — Distress logic:** flag prolonged submersion, near-stationary swimmers, danger-zone entry.
-- [ ] **M5 — Alerting:** on-screen alarm + highlighted zone, then a Telegram alert to a phone.
-- [ ] **M6 — Demo polish:** dashboard + recorded demo video for judges.
-
-*Deployment vision (from the proposal, not built in the prototype): solar buoys, Raspberry Pi edge units, LoRaWAN, smartwatch alerts.*
+- [ ] Best test clip in `data/videos/` (1 swimmer, clear distress scenario)
+- [ ] Run `coast.py --no-window` → check `output/*_coast.mp4`
+- [ ] Discord `#coast-alerts` channel open during presentation
+- [ ] Slides explain: assists lifeguards, surface-based detection, future grid/hardware
+- [ ] Record screen capture as backup if live demo fails
