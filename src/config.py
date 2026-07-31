@@ -10,6 +10,8 @@ instead of hunting through the code. (ADDING KEEDANU TEST)
 #   "yolov8s.pt"  small  - good balance (recommended starting point)
 #   "yolov8m.pt"  medium - noticeably better in crowds, slower on CPU
 # Ultralytics downloads whichever you choose automatically on first run.
+# To use a custom / borrowed model, put the .pt file in models/ and set e.g.:
+#   MODEL_NAME = "models/their_best.pt"
 MODEL_NAME = "yolov8s.pt"
 
 # Only care about the "person" class (COCO class id 0).

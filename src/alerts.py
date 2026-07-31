@@ -10,17 +10,20 @@ Channels:
 import os
 import sys
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict, List, Tuple
 
 import cv2
 
 import config
 
-# Load secrets from .env if python-dotenv is installed (optional).
+# Load .env from project root (folder above src/) so it works regardless of cwd.
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_ENV_FILE = _PROJECT_ROOT / ".env"
 try:
     from dotenv import load_dotenv
 
-    load_dotenv()
+    load_dotenv(_ENV_FILE)
 except ImportError:
     pass
 
@@ -84,10 +87,18 @@ class AlertManager:
         )
 
         if config.ENABLE_DISCORD and not self._discord_enabled:
-            print(
-                "[WARN] Discord alerts disabled — set DISCORD_WEBHOOK_URL in .env "
-                "(see .env.example), and pip install requests python-dotenv"
-            )
+            if not self._discord_webhook:
+                print(
+                    "[WARN] Discord disabled — DISCORD_WEBHOOK_URL is empty in "
+                    f"{_ENV_FILE}\n"
+                    "       Create a webhook in Discord and paste the URL in .env"
+                )
+            elif requests is None:
+                print("[WARN] Discord disabled — run: pip install requests")
+            else:
+                print("[WARN] Discord disabled — check ENABLE_DISCORD in config.py")
+        elif self._discord_enabled:
+            print("[INFO] Discord alerts enabled (webhook loaded from .env)")
         if config.ENABLE_TELEGRAM and not self._telegram_enabled:
             print(
                 "[WARN] Telegram alerts disabled — set TELEGRAM_BOT_TOKEN and "
