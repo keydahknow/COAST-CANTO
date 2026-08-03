@@ -33,14 +33,37 @@ TRACKER_CONFIG = "bytetrack.yaml"
 SHOW_TRAIL = True
 TRAIL_LENGTH = 30  # how many past positions to keep per ID
 
+<<<<<<< Updated upstream
+=======
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
 # --- Distress (M4) ---
 # How long (seconds) before we flag someone. Higher = fewer false alarms.
 STATIONARY_SECONDS = 8.0       # visible but barely moving → orange WARNING
 STATIONARY_PIXELS = 30         # total movement in that window (pixels)
 SUBMERSION_SECONDS = 3.0       # vanished from view → red ALERT
 SUBMERSION_MIN_VISIBLE_SECONDS = 1.0  # must be tracked this long first
+<<<<<<< Updated upstream
 DISTRESS_COLOR = (0, 0, 255)   # red (BGR)
 WARNING_COLOR = (0, 165, 255)  # orange (BGR)
+=======
+# ID-swap guard: if a new ID appears this close (pixels) soon after another
+# vanishes, assume tracker reassignment — do not trigger submersion on old ID.
+ID_SWAP_SECONDS = 2.0
+ID_SWAP_MAX_PIXELS = 100
+DISTRESS_COLOR = (0, 0, 255)   # red (BGR)
+WARNING_COLOR = (0, 165, 255)  # orange (BGR)
+
+# --- Alerts (M5) ---
+ENABLE_DISCORD = True          # recommended for demo (free webhook)
+ENABLE_TELEGRAM = False        # optional; set True if using Telegram bot
+DISCORD_BOT_NAME = "C.O.A.S.T. Alert"
+SHOW_ALERT_BANNER = True       # big top banner when distress is active
+ALERT_COOLDOWN_SECONDS = 15.0  # don't re-send same ID+reason too often
+PLAY_ALERT_SOUND = False       # beep on alert (Windows only; annoying on video files)
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 
 # --- Alerts (M5) ---
 ENABLE_DISCORD = True          # recommended for demo (free webhook)
