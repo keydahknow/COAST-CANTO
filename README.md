@@ -99,7 +99,7 @@ Invoke-RestMethod -Uri "YOUR_WEBHOOK_URL" -Method Post -ContentType "application
 
 - [x] **M1 — Detection** (`detect.py`)
 - [x] **M2 — Tracking** (`tracker.py`)
-- [ ] **M3 — Grid & zones** (location cells — not built yet)
+- [x] **M3 — Grid & lanes** (`grid.py` — Left | Center | Right on main camera)
 - [x] **M4 — Distress logic** (`distress.py`)
 - [x] **M5 — Alerting** (`alerts.py`, Discord)
 - [x] **M6 — Demo entry point** (`coast.py`)
