@@ -1,9 +1,7 @@
 """
 C.O.A.S.T. pipeline — full prototype in one pass.
 
-M2 tracking → M4 distress → M5 alerts (on-screen + Discord).
-
-Called by coast.py (official demo) and track.py (legacy alias).
+M2 tracking → M3 grid lanes → M4 distress → M5 alerts (on-screen + Discord).
 """
 
 import os
@@ -15,6 +13,7 @@ from ultralytics import YOLO
 import config
 from alerts import AlertManager
 from distress import DistressMonitor
+from grid import LaneGrid
 from tracker import draw_swimmer, track_frame, update_trails
 
 
@@ -80,9 +79,10 @@ def draw_hud(frame, swimmers, submerged_stubs, frame_index):
 
     y = 76
     for stub in submerged_stubs:
+        lane = stub.grid_cell or "unknown"
         cv2.putText(
             frame,
-            f"ALERT: ID {stub.id} submersion (last seen here)",
+            f"ALERT: ID {stub.id} submersion — Lane {lane}",
             (12, y),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.6,
@@ -114,6 +114,7 @@ def run(source: str, no_window: bool = False) -> str | None:
         f"[INFO] Alerts: Discord={'on' if config.ENABLE_DISCORD else 'off'}, "
         f"banner={'on' if config.SHOW_ALERT_BANNER else 'off'}"
     )
+    print(f"[INFO] Grid: 3 lanes (Left | Center | Right), show={config.SHOW_GRID}")
 
     model = YOLO(config.MODEL_NAME)
     cap = open_source(source)
@@ -125,6 +126,7 @@ def run(source: str, no_window: bool = False) -> str | None:
     distress_monitor = DistressMonitor(fps=fps)
     alert_manager = AlertManager(fps=fps)
     trail_history = {}
+    lane_grid: LaneGrid | None = None
 
     print("[INFO] Running pipeline... press 'q' in the preview window to quit.")
     print("[INFO] Orange = STATIONARY  |  Red = SUBMERGED  |  Banner = alert")
@@ -136,11 +138,24 @@ def run(source: str, no_window: bool = False) -> str | None:
             break
         frame_count += 1
 
+        h, w = frame.shape[:2]
+        if lane_grid is None:
+            lane_grid = LaneGrid(w, h)
+        else:
+            lane_grid.update_size(w, h)
+
         _, swimmers = track_frame(model, frame, persist=True)
         update_trails(swimmers, trail_history)
+
+        # M3: assign lane before distress so alerts include Left/Center/Right.
+        lane_grid.assign_lanes(swimmers)
+
         submerged_stubs = distress_monitor.process(swimmers, frame_count)
+        lane_grid.assign_lanes(submerged_stubs)
+
         alert_manager.handle_frame(frame, swimmers, submerged_stubs, frame_count)
 
+        lane_grid.draw(frame)
         for swimmer in swimmers:
             draw_swimmer(frame, swimmer)
         for stub in submerged_stubs:

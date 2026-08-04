@@ -7,13 +7,9 @@ tracking (M2):
   1. STATIONARY — ID is visible but barely moving (e.g. treading in one spot).
   2. SUBMERSION — ID was visible, then disappears for several seconds
      (possible underwater / out of view).
-
-<<<<<<< Updated upstream
-=======
   3. ID-SWAP GUARD — if a new ID appears near a vanished ID within ~2 seconds,
      treat it as tracker reassignment, not submersion (reduces false alerts).
 
->>>>>>> Stashed changes
 Both rules need SECONDS of evidence so one missed frame does not trigger
 a false alarm. Tune thresholds in config.py.
 """
@@ -36,24 +32,18 @@ class TrackRecord:
     last_center: Tuple[int, int]
     # Recent (frame_index, center) pairs — used for the stationary check.
     center_history: List[Tuple[int, Tuple[int, int]]] = field(default_factory=list)
-<<<<<<< Updated upstream
-=======
     # Set when a new nearby ID likely replaced this one — skip submersion alerts.
     submersion_suppressed: bool = False
->>>>>>> Stashed changes
 
 
 def _frames_for_seconds(seconds: float, fps: float) -> int:
     return max(1, int(seconds * fps))
 
 
-<<<<<<< Updated upstream
-=======
 def _center_distance(a: Tuple[int, int], b: Tuple[int, int]) -> float:
     return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
 
 
->>>>>>> Stashed changes
 def _movement_pixels(history: List[Tuple[int, Tuple[int, int]]]) -> float:
     """Total path length (pixels) across the stored center history."""
     if len(history) < 2:
@@ -86,8 +76,6 @@ class DistressMonitor:
         self.min_visible_frames = _frames_for_seconds(
             config.SUBMERSION_MIN_VISIBLE_SECONDS, fps
         )
-<<<<<<< Updated upstream
-=======
         self.id_swap_frames = _frames_for_seconds(config.ID_SWAP_SECONDS, fps)
 
     def _is_likely_id_swap(
@@ -114,7 +102,6 @@ class DistressMonitor:
             if _center_distance(swimmer.center, vanished.last_center) <= config.ID_SWAP_MAX_PIXELS:
                 return True
         return False
->>>>>>> Stashed changes
 
     def process(
         self, swimmers: List[Swimmer], frame_index: int
@@ -134,34 +121,14 @@ class DistressMonitor:
         for track_id, record in self.records.items():
             if track_id in seen_ids:
                 continue
-<<<<<<< Updated upstream
-=======
             if record.submersion_suppressed:
                 continue
 
->>>>>>> Stashed changes
             missing_frames = frame_index - record.last_seen_frame
             visible_long_enough = (
                 record.last_seen_frame - record.first_seen_frame
                 >= self.min_visible_frames
             )
-<<<<<<< Updated upstream
-            if (
-                visible_long_enough
-                and missing_frames >= self.submersion_frames
-            ):
-                submerged_stubs.append(
-                    Swimmer(
-                        id=track_id,
-                        box=record.last_box,
-                        center=record.last_center,
-                        confidence=0.0,
-                        is_distress=True,
-                        severity="alert",
-                        is_submerged=True,
-                    )
-                )
-=======
             if not (visible_long_enough and missing_frames >= self.submersion_frames):
                 continue
 
@@ -180,7 +147,6 @@ class DistressMonitor:
                     is_submerged=True,
                 )
             )
->>>>>>> Stashed changes
 
         return submerged_stubs
 

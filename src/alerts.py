@@ -46,8 +46,8 @@ class AlertEvent:
     @property
     def location_text(self) -> str:
         if self.grid_cell:
-            return f"Zone {self.grid_cell}"
-        return "location pending (grid not wired yet)"
+            return f"Lane: {self.grid_cell}"
+        return "Lane: unknown"
 
     def message(self) -> str:
         level = "WARNING" if self.severity == "warning" else "ALERT"
