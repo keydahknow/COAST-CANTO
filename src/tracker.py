@@ -108,7 +108,7 @@ def draw_swimmer(frame, swimmer: Swimmer) -> None:
         else:
             color = config.WARNING_COLOR
     else:
-        color = color_for_id(swimmer.id)
+        color = config.BOX_COLOR
 
     if config.SHOW_TRAIL and len(swimmer.trail) > 1 and not swimmer.is_submerged:
         for i in range(1, len(swimmer.trail)):

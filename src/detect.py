@@ -1,16 +1,12 @@
 """
-C.O.A.S.T. — Win #1: detect people in a video file.
-
+C.O.A.S.T. 
 This is the foundation. It runs a pretrained YOLO model on a video,
 draws a box around every person, and (optionally) shows a live window
 and saves an annotated video to output/.
 
 No training required — YOLO already knows what a "person" looks like.
-Later milestones add: tracking (stable IDs), a grid overlay,
-distress heuristics, and alerts.
 
-USAGE (from the project root, with your virtual environment active):
-
+USAGE 
     python src/detect.py --source data/videos/test.mp4
 
     # use your webcam instead of a file:

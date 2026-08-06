@@ -3,8 +3,8 @@ M5 — Alerts: tell a lifeguard when distress is detected.
 
 Channels:
   1. ON-SCREEN — banner on the video (always works, no setup).
-  2. DISCORD   — message to a server channel (recommended for demo; free).
-  3. TELEGRAM  — optional phone alerts (needs bot token in .env).
+  2. DISCORD   — message to a server channel.
+  3. TELEGRAM  — optional phone alerts (needs bot token in .env). Not seet up.
 """
 
 import os
@@ -46,12 +46,12 @@ class AlertEvent:
     @property
     def location_text(self) -> str:
         if self.grid_cell:
-            return f"Lane: {self.grid_cell}"
-        return "Lane: unknown"
+            return f"Zone: {self.grid_cell}"
+        return "Zone: unknown"
 
     def message(self) -> str:
         level = "WARNING" if self.severity == "warning" else "ALERT"
-        detail = "stationary swimmer" if self.reason == "stationary" else "possible submersion"
+        detail = "swimmer stationary over 10 seconds" if self.reason == "stationary" else "possible submersion"
         return (
             f"C.O.A.S.T. {level}\n"
             f"Swimmer ID {self.track_id} — {detail}\n"
@@ -220,15 +220,16 @@ class AlertManager:
         return new_events
 
     def _draw_banner(self, frame, events: List[AlertEvent]) -> None:
-        """Big top banner — red for alerts, orange if warnings only."""
+        """Big bottom banner — red for alerts, orange if warnings only."""
         has_alert = any(e.severity == "alert" for e in events)
         color = config.DISTRESS_COLOR if has_alert else config.WARNING_COLOR
         label = "DISTRESS ALERT" if has_alert else "DISTRESS WARNING"
 
         h, w = frame.shape[:2]
         banner_h = 56
+        banner_top = h - banner_h
         overlay = frame.copy()
-        cv2.rectangle(overlay, (0, 0), (w, banner_h), color, -1)
+        cv2.rectangle(overlay, (0, banner_top), (w, h), color, -1)
         cv2.addWeighted(overlay, 0.65, frame, 0.35, 0, frame)
 
         # Primary line
@@ -238,11 +239,14 @@ class AlertManager:
             if primary.reason == "submersion"
             else "stationary"
         )
-        line1 = f"{label}: Swimmer ID {primary.track_id} — {detail} — {primary.location_text}"
+        line1 = (
+            f"{label}: Swimmer ID {primary.track_id} - {detail} - "
+            f"{primary.location_text}"
+        )
         cv2.putText(
             frame,
             line1,
-            (12, 36),
+            (12, banner_top + 36),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
             (255, 255, 255),
@@ -253,7 +257,7 @@ class AlertManager:
             cv2.putText(
                 frame,
                 f"+ {len(events) - 1} more active",
-                (12, 52),
+                (12, banner_top + 52),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5,
                 (255, 255, 255),

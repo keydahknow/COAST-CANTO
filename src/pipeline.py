@@ -6,6 +6,7 @@ M2 tracking → M3 grid lanes → M4 distress → M5 alerts (on-screen + Discord
 
 import os
 import sys
+from typing import Any, Callable, Dict, Optional
 
 import cv2
 from ultralytics import YOLO
@@ -14,7 +15,11 @@ import config
 from alerts import AlertManager
 from distress import DistressMonitor
 from grid import LaneGrid
+from settings import apply_runtime_settings
 from tracker import draw_swimmer, track_frame, update_trails
+
+FrameCallback = Callable[[Any, int, list, list], None]
+StopCheck = Callable[[], bool]
 
 
 def open_source(source: str):
@@ -24,14 +29,14 @@ def open_source(source: str):
         cap = cv2.VideoCapture(source)
     else:
         if not os.path.exists(source):
-            sys.exit(
-                f"[ERROR] Video not found: {source}\n"
-                f"        Put a video in data/videos/ and pass its path."
+            raise FileNotFoundError(
+                f"Video not found: {source}\n"
+                "Put a video in data/videos/ or upload one in the dashboard."
             )
         cap = cv2.VideoCapture(source)
 
     if not cap.isOpened():
-        sys.exit(f"[ERROR] Could not open source: {source}")
+        raise RuntimeError(f"Could not open source: {source}")
     return cap
 
 
@@ -82,7 +87,7 @@ def draw_hud(frame, swimmers, submerged_stubs, frame_index):
         lane = stub.grid_cell or "unknown"
         cv2.putText(
             frame,
-            f"ALERT: ID {stub.id} submersion — Lane {lane}",
+            f"ALERT: ID {stub.id} submersion - Zone {lane}",
             (12, y),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.6,
@@ -92,13 +97,31 @@ def draw_hud(frame, swimmers, submerged_stubs, frame_index):
         y += 22
 
 
-def run(source: str, no_window: bool = False) -> str | None:
+def run(
+    source: str,
+    no_window: bool = False,
+    save_output: Optional[bool] = None,
+    settings: Optional[Dict[str, Any]] = None,
+    frame_callback: Optional[FrameCallback] = None,
+    stop_check: Optional[StopCheck] = None,
+    sync_settings_each_frame: bool = False,
+) -> Optional[str]:
     """
     Run the full C.O.A.S.T. pipeline on a video file, webcam index, or RTSP URL.
 
+    Optional hooks for the Streamlit dashboard:
+      - settings: dict of config overrides applied before the run
+      - frame_callback: called with (frame, frame_index, swimmers, submerged_stubs)
+      - stop_check: return True to stop early (checked each frame)
+      - sync_settings_each_frame: re-apply settings + distress thresholds each frame
+
     Returns the output video path, or None if SAVE_OUTPUT is False.
     """
-    show_window = config.SHOW_WINDOW and not no_window
+    apply_runtime_settings(settings)
+    if save_output is not None:
+        config.SAVE_OUTPUT = save_output
+
+    show_window = config.SHOW_WINDOW and not no_window and frame_callback is None
 
     print("=" * 56)
     print("  C.O.A.S.T. — Coastal Observation & Analytic Sensing Technology")
@@ -114,7 +137,7 @@ def run(source: str, no_window: bool = False) -> str | None:
         f"[INFO] Alerts: Discord={'on' if config.ENABLE_DISCORD else 'off'}, "
         f"banner={'on' if config.SHOW_ALERT_BANNER else 'off'}"
     )
-    print(f"[INFO] Grid: 3 lanes (Left | Center | Right), show={config.SHOW_GRID}")
+    print(f"[INFO] Grid: 6 cells (A B C | 1 2 3), show={config.SHOW_GRID}")
 
     model = YOLO(config.MODEL_NAME)
     cap = open_source(source)
@@ -125,7 +148,7 @@ def run(source: str, no_window: bool = False) -> str | None:
 
     distress_monitor = DistressMonitor(fps=fps)
     alert_manager = AlertManager(fps=fps)
-    trail_history = {}
+    trail_history: dict = {}
     lane_grid: LaneGrid | None = None
 
     print("[INFO] Running pipeline... press 'q' in the preview window to quit.")
@@ -133,10 +156,17 @@ def run(source: str, no_window: bool = False) -> str | None:
     frame_count = 0
 
     while True:
+        if stop_check and stop_check():
+            break
+
         ok, frame = cap.read()
         if not ok:
             break
         frame_count += 1
+
+        if sync_settings_each_frame and settings:
+            apply_runtime_settings(settings)
+            distress_monitor.sync_thresholds()
 
         h, w = frame.shape[:2]
         if lane_grid is None:
@@ -147,7 +177,6 @@ def run(source: str, no_window: bool = False) -> str | None:
         _, swimmers = track_frame(model, frame, persist=True)
         update_trails(swimmers, trail_history)
 
-        # M3: assign lane before distress so alerts include Left/Center/Right.
         lane_grid.assign_lanes(swimmers)
 
         submerged_stubs = distress_monitor.process(swimmers, frame_count)
@@ -164,6 +193,9 @@ def run(source: str, no_window: bool = False) -> str | None:
 
         if writer is not None:
             writer.write(frame)
+
+        if frame_callback:
+            frame_callback(frame, frame_count, swimmers, submerged_stubs)
 
         if show_window:
             cv2.imshow("C.O.A.S.T.", frame)

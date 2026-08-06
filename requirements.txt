@@ -9,3 +9,6 @@ lapx>=0.5.2              # required by YOLO tracking (ByteTrack)
 # --- Alerts (M5) ---
 python-dotenv==1.0.1   # load Telegram keys from .env
 requests==2.34.2       # send Telegram messages
+
+# --- Dashboard (M6) ---
+streamlit>=1.32.0    # local web UI (streamlit run app.py)

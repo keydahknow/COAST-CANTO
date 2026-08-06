@@ -23,6 +23,15 @@ python src/coast.py --source data/videos/demo.mp4 --no-window
 
 Output: `output/demo_coast.mp4` (annotated demo video for judges).
 
+### Dashboard (upload, webcam, live settings)
+
+```powershell
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Opens a local browser UI with a COAST overview, video upload or webcam mode, and a sidebar to tune detection/distress settings.
+
 ---
 
 ## Project layout
@@ -103,7 +112,7 @@ Invoke-RestMethod -Uri "YOUR_WEBHOOK_URL" -Method Post -ContentType "application
 - [x] **M4 — Distress logic** (`distress.py`)
 - [x] **M5 — Alerting** (`alerts.py`, Discord)
 - [x] **M6 — Demo entry point** (`coast.py`)
-- [ ] **M6 — Streamlit dashboard** (optional polish)
+- [x] **M6 — Streamlit dashboard** (`app.py` — upload, webcam, live config)
 - [ ] **Fine-tuning** (thresholds + optional custom model via Colab notebook)
 
 *Hardware deployment (proposal vision): solar buoys, Raspberry Pi, LoRaWAN, smartwatch — not in this software prototype.*
