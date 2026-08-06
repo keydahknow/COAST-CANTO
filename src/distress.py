@@ -78,6 +78,19 @@ class DistressMonitor:
         )
         self.id_swap_frames = _frames_for_seconds(config.ID_SWAP_SECONDS, fps)
 
+    def sync_thresholds(self) -> None:
+        """Re-read timing thresholds from config (after UI changes)."""
+        self.stationary_frames = _frames_for_seconds(
+            config.STATIONARY_SECONDS, self.fps
+        )
+        self.submersion_frames = _frames_for_seconds(
+            config.SUBMERSION_SECONDS, self.fps
+        )
+        self.min_visible_frames = _frames_for_seconds(
+            config.SUBMERSION_MIN_VISIBLE_SECONDS, self.fps
+        )
+        self.id_swap_frames = _frames_for_seconds(config.ID_SWAP_SECONDS, self.fps)
+
     def _is_likely_id_swap(
         self,
         vanished: TrackRecord,

@@ -1,17 +1,17 @@
 """
-M3 — Grid / lane logic for locating swimmers in the water.
+M3 — Grid logic for locating swimmers in the water.
 
 DEMO (single main camera):
-  The frame is split into 3 vertical lanes — Left | Center | Right.
-  Each swimmer's center point maps to one lane. Distress alerts include
-  that lane name (e.g. "Lane: Center").
+  3 columns × 2 rows = 6 cells.
+  Two vertical lines (thirds) + one horizontal line (middle) divide the frame.
+  Top row labels: A | B | C  (left → right)
+  Bottom row labels: 1 | 2 | 3  (left → right)
+  Alerts include the cell name (e.g. "Zone: B").
 
 FUTURE EXPANSION (not implemented — documented for proposal alignment):
-  Additional cameras (left/right of main) would each have their own lane grid.
+  Additional cameras (left/right of main) would each have their own grid.
   Those grids would be cross-referenced to the MAIN camera grid so all alerts
-  are still reported from the main camera's perspective, e.g.:
-    side-cam "far left" → main grid "Left"
-  See LaneGrid and the note on map_external_lane() below.
+  are still reported from the main camera's perspective.
 """
 
 from typing import List
@@ -21,15 +21,15 @@ import cv2
 import config
 from tracker import Swimmer
 
-# Display labels for the three demo lanes (capitalized for alerts).
-LANE_LEFT = "Left"
-LANE_CENTER = "Center"
-LANE_RIGHT = "Right"
+# Top row (near / upper half of frame) — left to right.
+ROW_TOP = ("A", "B", "C")
+# Bottom row (far / lower half of frame) — left to right.
+ROW_BOTTOM = ("1", "2", "3")
 
 
 class LaneGrid:
     """
-    Three vertical lanes across one camera view (equal width thirds).
+    Six-cell grid: 3 equal columns × 2 equal rows on one camera view.
 
     Boundaries update if the video resolution changes (e.g. first frame).
     """
@@ -39,6 +39,7 @@ class LaneGrid:
         self.height = frame_height
         self.boundary_x1 = frame_width // 3
         self.boundary_x2 = 2 * frame_width // 3
+        self.boundary_y = frame_height // 2
 
     def update_size(self, frame_width: int, frame_height: int) -> None:
         """Recompute boundaries if frame size changes (webcam)."""
@@ -47,23 +48,30 @@ class LaneGrid:
             self.height = frame_height
             self.boundary_x1 = frame_width // 3
             self.boundary_x2 = 2 * frame_width // 3
+            self.boundary_y = frame_height // 2
 
-    def lane_for_point(self, x: int, y: int) -> str:
-        """Return lane label (Left / Center / Right) for a pixel position."""
+    def _column_index(self, x: int) -> int:
         if x < self.boundary_x1:
-            return LANE_LEFT
+            return 0
         if x < self.boundary_x2:
-            return LANE_CENTER
-        return LANE_RIGHT
+            return 1
+        return 2
+
+    def cell_for_point(self, x: int, y: int) -> str:
+        """Return cell label (A–C top row, 1–3 bottom row) for a pixel position."""
+        col = self._column_index(x)
+        if y < self.boundary_y:
+            return ROW_TOP[col]
+        return ROW_BOTTOM[col]
 
     def assign_lanes(self, swimmers: List[Swimmer]) -> None:
         """Set grid_cell on each swimmer from their center point."""
         for swimmer in swimmers:
             cx, cy = swimmer.center
-            swimmer.grid_cell = self.lane_for_point(cx, cy)
+            swimmer.grid_cell = self.cell_for_point(cx, cy)
 
     def draw(self, frame) -> None:
-        """Draw lane dividers and labels on the frame."""
+        """Draw grid lines and cell labels on the frame."""
         if not config.SHOW_GRID:
             return
 
@@ -73,40 +81,43 @@ class LaneGrid:
         color = config.GRID_COLOR
         thickness = config.GRID_LINE_THICKNESS
 
-        # Vertical lane dividers (full height).
+        # Vertical dividers (full height).
         cv2.line(frame, (self.boundary_x1, 0), (self.boundary_x1, h), color, thickness)
         cv2.line(frame, (self.boundary_x2, 0), (self.boundary_x2, h), color, thickness)
 
-        # Lane names at the top of each third.
-        labels = [
-            (LANE_LEFT, w // 6),
-            (LANE_CENTER, w // 2),
-            (LANE_RIGHT, 5 * w // 6),
+        # Horizontal divider (middle row split).
+        cv2.line(frame, (0, self.boundary_y), (w, self.boundary_y), color, thickness)
+
+        # Label each cell at its center.
+        col_centers = (w // 6, w // 2, 5 * w // 6)
+        row_centers = (h // 4, 3 * h // 4)
+        cell_labels = [
+            (ROW_TOP, row_centers[0]),
+            (ROW_BOTTOM, row_centers[1]),
         ]
-        for label, x_center in labels:
-            text_size = cv2.getTextSize(
-                label, cv2.FONT_HERSHEY_SIMPLEX, config.GRID_LABEL_SCALE, 2
-            )[0]
-            x = x_center - text_size[0] // 2
-            cv2.putText(
-                frame,
-                label,
-                (x, config.GRID_LABEL_Y),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                config.GRID_LABEL_SCALE,
-                color,
-                2,
-            )
+        for labels, y_center in cell_labels:
+            for label, x_center in zip(labels, col_centers):
+                text_size = cv2.getTextSize(
+                    label, cv2.FONT_HERSHEY_SIMPLEX, config.GRID_LABEL_SCALE, 2
+                )[0]
+                x = x_center - text_size[0] // 2
+                y = y_center + text_size[1] // 2
+                cv2.putText(
+                    frame,
+                    label,
+                    (x, y),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    config.GRID_LABEL_SCALE,
+                    color,
+                    2,
+                )
 
 
-def map_external_lane(side_camera_lane: str, camera_side: str) -> str:
+def map_external_lane(side_camera_cell: str, camera_side: str) -> str:
     """
-    FUTURE: map a side camera's lane to the main camera grid.
+    FUTURE: map a side camera's cell to the main camera grid.
 
-    Not used in the demo. Example stub for multi-camera expansion:
-      map_external_lane("center", "left")  → "Left" on main grid
-
-    Implement mapping tables when side cameras are added.
+    Not used in the demo. Implement mapping tables when side cameras are added.
     """
-    _ = (side_camera_lane, camera_side)
-    return LANE_CENTER
+    _ = (side_camera_cell, camera_side)
+    return "B"

@@ -41,7 +41,7 @@ TRAIL_LENGTH = 30  # how many past positions to keep per ID
 # How long (seconds) before we flag someone. Higher = fewer false alarms.
 STATIONARY_SECONDS = 15.0       # visible but barely moving → orange WARNING
 STATIONARY_PIXELS = 30         # total movement in that window (pixels)
-SUBMERSION_SECONDS = 15.0       # vanished from view → red ALERT
+SUBMERSION_SECONDS = 2.0       # vanished from view → red ALERT
 
 SUBMERSION_MIN_VISIBLE_SECONDS = 1.0  # must be tracked this long first
 
@@ -64,12 +64,11 @@ ALERT_COOLDOWN_SECONDS = 15.0  # don't re-send same ID+reason too often
 PLAY_ALERT_SOUND = False       # beep on alert (Windows only; annoying on video files)
 
 
-# --- Grid (M3) — demo: 3 vertical lanes on one main camera ---
-SHOW_GRID = True               # draw Left | Center | Right dividers on video
+# --- Grid (M3) — demo: 6 cells (A B C top, 1 2 3 bottom) on main camera ---
+SHOW_GRID = True               # draw 3×2 grid overlay on video
 GRID_COLOR = (200, 200, 200)   # light gray lane lines (BGR)
 GRID_LINE_THICKNESS = 2
-GRID_LABEL_SCALE = 0.8         # lane name text size at top of frame
-GRID_LABEL_Y = 28              # pixels from top for lane labels
+GRID_LABEL_SCALE = 0.8         # cell label text size (A B C / 1 2 3)
 
 
 
@@ -86,9 +85,7 @@ SAVE_OUTPUT = True
 OUTPUT_DIR = "output"
 
 
-
 # Box + text colors (Blue, Green, Red — OpenCV uses BGR, not RGB).
-
 BOX_COLOR = (0, 200, 0)
 TEXT_COLOR = (255, 255, 255)
 

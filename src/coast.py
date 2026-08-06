@@ -1,10 +1,7 @@
 """
 C.O.A.S.T. — Official demo entry point.
-
 Runs the full prototype: track swimmers, detect distress, send alerts.
-
 USAGE (from project root, venv active):
-
     python src/coast.py --source data/videos/demo.mp4
     python src/coast.py --source data/videos/demo.mp4 --no-window
     python src/coast.py --source 0
