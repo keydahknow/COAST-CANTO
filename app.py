@@ -116,15 +116,12 @@ def render_intro():
     st.subheader("Coastal Observation & Analytic Sensing Technology")
     st.markdown(
         """
-        **AI-assisted swimmer monitoring for lifeguards** — a prototype for the
-        CANTO Innovation Challenge 2026 (*Climate & Disaster Resilience*).
+        This is computer vision prototype that helps lifeguards located possible drownings or persons in distress. 
 
-        C.O.A.S.T. detects and tracks swimmers in video, flags possible distress
-        (prolonged stationary behavior or sudden disappearance from view), maps
-        each swimmer to a **6-zone grid** (A B C top row, 1 2 3 bottom row), and
-        raises alerts on-screen and via Discord.
+        C.O.A.S.T. detects and tracks swimmers in video, flags possible distress 
+        (prolonged stationary behavior or sudden disappearance from view), and the states the swimmers location in an alert.
+        Location is based on a camera view grid system. Alerts appear on-screen and via Discord.
 
-        > This system **assists, not replaces**, trained lifeguards.
 
         **Team: The Buoyz** — Asia Cooper · Imani Zakuri · Samuel Blache · Keedanu Halls
         """
@@ -211,12 +208,12 @@ def main():
     render_intro()
     settings = build_settings_from_sidebar()
 
-    st.divider()
+    #st.divider()
     st.header("Run C.O.A.S.T.")
 
     mode = st.radio(
-        "Input source",
-        options=["Upload video", "Webcam (live)"],
+        "Choose video source",
+        options=["Upload video", "Camera feed (live)"],
         horizontal=True,
     )
 
@@ -286,7 +283,7 @@ def main():
             max_value=4,
             value=0,
             step=1,
-            help="Usually 0 for the built-in camera.",
+            help="Usually 0 for the built-in camera. Cycle through connected cameras with other numbers.",
         )
         max_seconds = st.slider(
             "Max live run (seconds)",
