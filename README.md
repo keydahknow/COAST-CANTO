@@ -38,14 +38,14 @@ Output: `output/demo_coast.mp4` (annotated video for judges).
 streamlit run app.py
 ```
 
-Opens a local browser UI at `http://localhost:8501` with:
+Opens a local browser UI at `http://localhost:8501`:
 
-- COAST overview and description
-- **Upload video** — process a file, preview frames, download annotated output
-- **Webcam (live)** — run the pipeline on your camera with sidebar tuning
-- **Configuration sidebar** — change model, confidence, distress thresholds, grid, and alerts without editing code
+- **Landing page** — what C.O.A.S.T. does, How it works, Get Started, Open Dashboard
+- **Onboarding** — placeholder form (accessible, not wired yet)
+- **Detection dashboard** — upload video or webcam, live config cards, dashboard alerts (counts, zone, swimmer ID)
+- **Submersion slider** goes up to 30 seconds
 
-**Close the dashboard:** press `Ctrl+C` in the terminal where Streamlit is running.
+**Close the app:** press `Ctrl+C` in the terminal where Streamlit is running.
 
 > **Webcam note:** Live mode runs full YOLO inference on every frame, so it can feel slow on CPU. For smoother preview, use `yolov8n.pt` and image size `640` in the sidebar. Uploaded video is recommended for the competition demo.
 
@@ -55,8 +55,9 @@ Opens a local browser UI at `http://localhost:8501` with:
 
 ```
 CANTO/
-├── app.py             # Streamlit dashboard (M6 UI)
-├── .streamlit/        # Streamlit config
+├── app.py             # Streamlit app (landing → onboarding / dashboard)
+├── ui/                # landing, onboarding, dashboard pages + CSS
+├── .streamlit/        # Streamlit theme
 ├── src/
 │   ├── coast.py       # official CLI demo entry point
 │   ├── pipeline.py    # full pipeline orchestrator

@@ -105,6 +105,7 @@ def run(
     frame_callback: Optional[FrameCallback] = None,
     stop_check: Optional[StopCheck] = None,
     sync_settings_each_frame: bool = False,
+    draw_video_hud: bool = True,
 ) -> Optional[str]:
     """
     Run the full C.O.A.S.T. pipeline on a video file, webcam index, or RTSP URL.
@@ -114,6 +115,7 @@ def run(
       - frame_callback: called with (frame, frame_index, swimmers, submerged_stubs)
       - stop_check: return True to stop early (checked each frame)
       - sync_settings_each_frame: re-apply settings + distress thresholds each frame
+      - draw_video_hud: yellow OpenCV HUD (frame/IDs/alert counts). Dashboard skips this.
 
     Returns the output video path, or None if SAVE_OUTPUT is False.
     """
@@ -189,7 +191,8 @@ def run(
             draw_swimmer(frame, swimmer)
         for stub in submerged_stubs:
             draw_swimmer(frame, stub)
-        draw_hud(frame, swimmers, submerged_stubs, frame_count)
+        if draw_video_hud:
+            draw_hud(frame, swimmers, submerged_stubs, frame_count)
 
         if writer is not None:
             writer.write(frame)
